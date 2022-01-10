@@ -6,8 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
+import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.listener.StateMachineListenerAdapter;
+import org.springframework.statemachine.state.State;
 
 import static com.springstatemachine.core.domain.statemachine.DecantEvent.ERROR_IDENTIFY_ITEM;
 import static com.springstatemachine.core.domain.statemachine.DecantEvent.ERROR_UPDATE_ITEM;
@@ -45,5 +48,16 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<DecantStat
                 .and().withExternal().source(PROCESSING).target(PROCESSING).event(UPDATE_ITEM)
                 .and().withExternal().source(PROCESSING).target(PROCESSING).event(ERROR_UPDATE_ITEM)
                 .and().withExternal().source(PROCESSING).target(COMPLETED).event(FINISH_DECANT);
+    }
+
+    @Override
+    public void configure(StateMachineConfigurationConfigurer<DecantState, DecantEvent> config) throws Exception {
+        StateMachineListenerAdapter<DecantState, DecantEvent> listenerAdapter = new StateMachineListenerAdapter<>(){
+            @Override
+            public void stateChanged(State<DecantState, DecantEvent> from, State<DecantState, DecantEvent> to) {
+                log.info(String.format("stateChanged(from: %s, to: %s)", from, to));
+            }
+        };
+        config.withConfiguration().listener(listenerAdapter);
     }
 }
